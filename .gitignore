@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+.idea/*
+.envrc
+.python-version
+.DS_Store
