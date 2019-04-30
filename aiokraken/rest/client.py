@@ -23,8 +23,7 @@ class RestClient:
 
     async def public_request(self, endpoint, data=None):
         """ make public requests to kraken api"""
-        LOGGER.info(f'sending request to {BASE_URL}/0/public/{endpoint}')
-        LOGGER.info(data)
+        LOGGER.debug(f'sending request to {BASE_URL}/0/public/{endpoint}')
         async with self.session.post(f'{BASE_URL}/0/public/{endpoint}', json=data) as response:
             if response.status not in (200, 201, 202):
                 return {'error': response.status}
@@ -84,10 +83,35 @@ class RestClient:
     """
     async def balance(self):
         response = await self.private_request('Balance')
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
         return response['result']
 
     async def trade_balance(self, data={}):
         response = await self.private_request('TradeBalance', data)
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
+        return response['result']
+
+    async def ledgers(self, data={}):
+        response = await self.private_request('Ledgers', data)
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
+        return response['result']
+
+    async def trade_volume(self, data={}):
+        """ Get trade volume and fees info
+            https://www.kraken.com/en-us/features/fee-schedule
+
+        """
+        response = await self.private_request('TradeVolume', data)
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
+
         return response['result']
 
     """
@@ -95,12 +119,21 @@ class RestClient:
     """
     async def time(self):
         response = await self.public_request('Time')
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
         return response['result']
 
     async def assets(self, data=None):
         response = await self.public_request('Assets', data)
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
         return response['result']
 
     async def asset_pairs(self, data=None):
         response = await self.public_request('AssetPairs', data)
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
         return response['result']

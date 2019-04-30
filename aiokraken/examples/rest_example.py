@@ -34,6 +34,37 @@ async def get_trade_balance():
     await rest_kraken.close()
 
 
+async def get_trade_volume():
+    """ get account trade volume
+    """
+    rest_kraken = RestClient(KEY, SECRET)
+
+    data = {
+        'pair': 'all'
+    }
+    response = await rest_kraken.trade_volume(data)
+    print(f'response is {response}')
+    response = await rest_kraken.trade_volume()
+    print(f'response is {response}')
+    await rest_kraken.close()
+
+
+async def get_ledgers():
+    """ get account trade volume
+    """
+    rest_kraken = RestClient(KEY, SECRET)
+
+    data = {
+        'pair': 'ADAEUR,ADACAD',
+        'fee-info': 'false'
+    }
+    response = await rest_kraken.ledgers()
+    print(f'response is {response}')
+    response = await rest_kraken.ledgers(data)
+    print(f'response is {response}')
+    await rest_kraken.close()
+
+
 # PUBLIC REQUEST EXAMPLES
 async def get_time():
     """ get kraken time"""
@@ -114,5 +145,7 @@ for signame in ('SIGINT', 'SIGTERM'):
 # loop.run_until_complete(get_assets())
 # loop.run_until_complete(get_asset_pairs_v1())
 # loop.run_until_complete(get_asset_pairs_v2())
-loop.run_until_complete(get_trade_balance())
+# loop.run_until_complete(get_trade_balance())
+loop.run_until_complete(get_trade_volume())
+# loop.run_until_complete(get_ledgers())
 
