@@ -114,10 +114,12 @@ class RestClient:
 
         return response['result']
 
-    """
-        Wrapper methods for public requests :  Time, Assets, AssetPairs, Ticker, OHLC, Depth, Trades, Spread
-    """
+    """ Wrapper methods for public requests :  Time, Assets, AssetPairs, Ticker, OHLC, Depth, Trades, Spread """
     async def time(self):
+        """ Get server time
+            unixtime =  as unix timestamp
+            rfc1123 = as RFC 1123 time format
+        """
         response = await self.public_request('Time')
         if response['error']:
             LOGGER.error(response['error'])
@@ -125,6 +127,7 @@ class RestClient:
         return response['result']
 
     async def assets(self, data=None):
+        """ Get asset info"""
         response = await self.public_request('Assets', data)
         if response['error']:
             LOGGER.error(response['error'])
@@ -132,7 +135,16 @@ class RestClient:
         return response['result']
 
     async def asset_pairs(self, data=None):
+        """ Get tradable asset pairs """
         response = await self.public_request('AssetPairs', data)
+        if response['error']:
+            LOGGER.error(response['error'])
+            return {}
+        return response['result']
+
+    async def ticker(self, data={'pair': 'XBTUSD'}):
+        """ Get ticker information """
+        response = await self.public_request('Ticker', data)
         if response['error']:
             LOGGER.error(response['error'])
             return {}

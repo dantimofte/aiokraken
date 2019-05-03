@@ -1,3 +1,3 @@
 """ Kraken main module """
-from aiokraken.websockets.client import WssClient
-from aiokraken.rest.client import RestClient
+from .websockets.client import WssClient
+from .rest.client import RestClient

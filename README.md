@@ -7,7 +7,6 @@ Python asyncio client for Kraken REST and Websockets API
 ## [REST example](https://github.com/dantimofte/aiokraken/blob/master/aiokraken/examples/rest_example.py)
 
     from aiokraken import RestClient
-    rest_kraken = RestClient()
     async def get_assets():
         """ get kraken time"""
         rest_kraken = RestClient()
