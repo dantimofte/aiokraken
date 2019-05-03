@@ -52,8 +52,6 @@ class TickItem:
 
 async def get_asset_pairs_v1():
     """
-        Make request using public_request method
-        Allows more freedom than using the wrapper methods
     """
     rest_kraken = RestClient()
     data = {
