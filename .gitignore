@@ -107,3 +107,6 @@ venv.bak/
 .envrc
 .python-version
 .DS_Store
+wss_private.py
+aiokraken/examples/wss_private.py
+tick_item.py
