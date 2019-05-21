@@ -301,6 +301,7 @@ for signame in ('SIGINT', 'SIGTERM'):
 # loop.run_until_complete(get_assets())
 # loop.run_until_complete(get_asset_pairs_v1())
 # loop.run_until_complete(get_asset_pairs_v2())
+loop.run_until_complete(get_balance())
 # loop.run_until_complete(get_trade_balance())
 # loop.run_until_complete(get_trade_volume())
 # loop.run_until_complete(get_ledgers())
@@ -311,6 +312,6 @@ for signame in ('SIGINT', 'SIGTERM'):
 # loop.run_until_complete(cancel_order('OLCXWY-UU6CW-PUSPSH'))
 # loop.run_until_complete(add_order())
 # loop.run_until_complete(place_ioc_order())
-loop.run_until_complete(test_strategy())
+# loop.run_until_complete(test_strategy())
 
 

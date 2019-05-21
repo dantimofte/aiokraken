@@ -17,25 +17,30 @@ class RestClient:
         self.key = key
         self.secret = secret
 
-        headers = {
-            'User-Agent': 'aiokraken'
+        _headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'
+            )
         }
-        self.session = aiohttp.ClientSession(headers=headers, raise_for_status=True)
+
+        self.session = aiohttp.ClientSession(headers=_headers, raise_for_status=True, trust_env=True)
 
     async def public_request(self, endpoint, data=None):
         """ make public requests to kraken api"""
-        LOGGER.debug(f'sending request to {BASE_URL}/0/public/{endpoint}')
-        async with self.session.post(f'{BASE_URL}/0/public/{endpoint}', json=data) as response:
-            if response.status not in (200, 201, 202):
-                return {'error': response.status}
-            else:
-                res = await response.json(encoding='utf-8', content_type=None)
-                res['error'] = "" if 'error' not in res else res['error']
-                return res
+        try:
+            async with self.session.post(f'{BASE_URL}/0/public/{endpoint}', data=data) as response:
+                if response.status not in (200, 201, 202):
+                    return {'error': response.status}
+                else:
+                    res = await response.json(encoding='utf-8', content_type=None)
+                    res['error'] = "" if 'error' not in res else res['error']
+                    return res
+        except aiohttp.ClientResponseError as err:
+            LOGGER.error(err)
+            return {'error': err}
 
     async def private_request(self, endpoint, data={}):
         """ make public requests to kraken api"""
-        LOGGER.debug(f'sending request to {BASE_URL}/0/private/{endpoint}')
         data['nonce'] = get_nonce()
 
         url_path = f"/0/private/{endpoint}"
@@ -50,14 +55,14 @@ class RestClient:
                     data=data,
                     headers=headers) as response:
                 if response.status not in (200, 201, 202):
-                    return {'error': response.status}
+                    return {'error': [response.status]}
                 else:
                     res = await response.json(encoding='utf-8', content_type=None)
                     res['error'] = "" if 'error' not in res else res['error']
                     return res
         except aiohttp.ClientResponseError as err:
             LOGGER.error(err)
-            return {'error': err}
+            return {'error': [err]}
 
     def _sign_message(self, data, url_path):
         """
