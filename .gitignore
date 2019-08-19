@@ -111,3 +111,4 @@ wss_private.py
 aiokraken/examples/wss_private.py
 tick_item.py
 pypi_guide.txt
+Pipfile.lock
