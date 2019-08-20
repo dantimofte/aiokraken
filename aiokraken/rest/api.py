@@ -1,3 +1,4 @@
+import types
 import urllib
 import hashlib
 import base64
@@ -5,7 +6,6 @@ import hmac
 import time
 import signal
 import asyncio
-
 from dataclasses import dataclass, asdict, field
 
 import typing
@@ -44,61 +44,22 @@ class API:
         return r
 
 
-class Private:
+def private(api, key, secret):
+    api.api_url = 'private/'
 
-    def __init__(self, base_url_path, key, secret):
-        self.base_url_path = base_url_path
-        self.api_url = 'private/'
-
-        # TODO :call function (arg) to grab them from somewhere...
-        self.key = key
-        self.secret = secret
-
-    @property
-    def url_path(self):
-        return self.base_url_path + self.api_url
-
-    def headers(self, endpoint= None):
-        _headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.131 Safari/537.36'
-            )
-        }
-
-        return _headers
-
-    def _sign_message(self, data, url_path):
-        """
-            Kraken message signature for private user endpoints
-            https://www.kraken.com/features/api#general-usage
-        """
-        post_data = urllib.parse.urlencode(data)
-
-        # Unicode-objects must be encoded before hashing
-        encoded = (str(data['nonce']) + post_data).encode()
-        message = url_path.encode() + hashlib.sha256(encoded).digest()
-        signature = hmac.new(
-            base64.b64decode(self.secret),
-            message,
-            hashlib.sha512
-        )
-        sig_digest = base64.b64encode(signature.digest())
-
-        return sig_digest.decode()
-
-    def sign(self, req: Request):
-        req.data['nonce'] = get_nonce()
-        req.headers['API-Key'] = self.key
-        req.headers['API-Sign'] = self._sign_message(req.data, req.url)
-
-        return req
+    # TODO :call function (arg) to grab them from somewhere...
+    api.key = key
+    api.secret = secret
 
     def request(self, endpoint, headers=None, data=None):
         h = headers or {}
         d = data or {}
         r = Request(url=self.url_path + endpoint, headers=h, data=d)
-        s = self.sign(r)
+        s = r.sign(key=key, secret = secret)
         return s
+
+    api.request = types.MethodType(request, api)
+    return api
 
 
 class Server:
@@ -125,7 +86,7 @@ class Server:
     @property
     def private(self):
         if self._private is None:
-            self._private = Private(base_url_path=self.url_path, key = self.key, secret=self.secret)
+            self._private = private(self.public, key = self.key, secret=self.secret)
         return self._private
 
     def time(self):
@@ -133,6 +94,16 @@ class Server:
 
     def balance(self):
         return self.private.request('Balance', data=None)
+
+
+# API DEFINITION
+
+# @kraken.resource(success = , error=)
+# def time(headers, data):
+#     return {
+#         200: success,
+#         400: error,
+#     }
 
 
 import aiohttp
@@ -190,15 +161,6 @@ class RestClient:
         """ Close aiohttp session """
         await self.session.close()
 
-
-# API DEFINITION
-
-# @kraken.resource(success = , error=)
-# def time(headers, data):
-#     return {
-#         200: success,
-#         400: error,
-#     }
 
 
 # EXAMPLE CODE
