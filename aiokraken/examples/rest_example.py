@@ -4,9 +4,9 @@ import signal
 from aiokraken import RestClient
 from aiokraken.utils import get_kraken_logger
 
-
-KEY = os.environ.get('KRAKEN_KEY')
-SECRET = os.environ.get('KRAKEN_SECRET')
+from aiokraken.rest import krak_key
+KEY = krak_key.key
+SECRET = krak_key.secret
 LOGGER = get_kraken_logger(__name__)
 
 

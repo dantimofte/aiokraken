@@ -18,17 +18,11 @@ else:
     from aiokraken.utils import get_nonce, get_kraken_logger
 
 
-
 class API:
 
-    def __init__(self, base_url, base_url_path):
-        self.base_url = base_url
+    def __init__(self, base_url_path):
         self.base_url_path =base_url_path
         self.api_url = 'public/'
-
-    @property
-    def url(self):
-        return self.base_url + self.api_url
 
     @property
     def url_path(self):
@@ -43,28 +37,22 @@ class API:
 
         return _headers
 
-
     def request(self, endpoint, headers=None, data=None):
         h = headers or {}
-        r = Request(url=self.url + endpoint, headers=h, data=data)
+        r = Request(url=self.url_path + endpoint, headers=h, data=data)
 
         return r
 
 
 class Private:
 
-    def __init__(self, base_url, base_url_path, key, secret):
-        self.base_url = base_url
+    def __init__(self, base_url_path, key, secret):
         self.base_url_path = base_url_path
         self.api_url = 'private/'
 
         # TODO :call function (arg) to grab them from somewhere...
         self.key = key
         self.secret = secret
-
-    @property
-    def url(self):
-        return self.base_url + self.api_url
 
     @property
     def url_path(self):
@@ -99,25 +87,24 @@ class Private:
         return sig_digest.decode()
 
     def sign(self, req: Request):
-        req.data['nonce'] = time.time()
+        req.data['nonce'] = get_nonce()
         req.headers['API-Key'] = self.key
-        req.headers['API-Sign'] = self._sign_message(req.data, req.url_path)
+        req.headers['API-Sign'] = self._sign_message(req.data, req.url)
 
         return req
 
-
     def request(self, endpoint, headers=None, data=None):
         h = headers or {}
-        r = Request(url=self.url + endpoint, headers=h, data=data)
-
-        return r
-
+        d = data or {}
+        r = Request(url=self.url_path + endpoint, headers=h, data=d)
+        s = self.sign(r)
+        return s
 
 
 class Server:
+    """ Class representing a SErver API"""
 
-    def __init__(self, base_url, key=None, secret=None):
-        self.base_url = base_url
+    def __init__(self, key=None, secret=None):
         self.key = key
         self.secret = secret
         self.versions = ['0']
@@ -126,23 +113,19 @@ class Server:
         self._private = None
 
     @property
-    def url(self):
-        return self.base_url + '/' + self.current_version + '/'
-
-    @property
     def url_path(self):
         return '/' + self.current_version + '/'
 
     @property
     def public(self):
         if self._public is None:
-            self._public = API(base_url= self.url, base_url_path=self.url_path)
+            self._public = API(base_url_path=self.url_path)
         return self._public
 
     @property
     def private(self):
         if self._private is None:
-            self._private = Private(base_url= self.url, base_url_path=self.url_path, key = self.key, secret=self.secret)
+            self._private = Private(base_url_path=self.url_path, key = self.key, secret=self.secret)
         return self._private
 
     def time(self):
@@ -157,11 +140,13 @@ import aiohttp
 LOGGER = get_kraken_logger(__name__)
 
 
+# MINIMAL CLIENT (only control flow & IO)
 class RestClient:
 
-    def __init__(self, api):
-
+    def __init__(self, host, api, protocol = "https://"):
+        self.host = host
         self.api = api
+        self.protocol = protocol
 
         _headers = {
             'User-Agent': (
@@ -176,8 +161,8 @@ class RestClient:
 
         kt = self.api.time()
 
-        try:
-            async with self.session.post(kt.url, headers=kt.headers, data=kt.data) as response:
+        try:  # TODO : pass protocol & host into the request url in order to have it displayed when erroring !
+            async with self.session.post(self.protocol + self.host + kt.url, headers=kt.headers, data=kt.data) as response:
 
                 return await kt(response)
 
@@ -185,14 +170,13 @@ class RestClient:
             LOGGER.error(err)
             return {'error': err}
 
-
     async def balance(self):
         """ make public requests to kraken api"""
 
         kt = self.api.balance()
 
         try:
-            async with self.session.post(kt.url, headers=kt.headers, data=kt.data) as response:
+            async with self.session.post(self.protocol + self.host + kt.url, headers=kt.headers, data=kt.data) as response:
 
                 return await kt(response)
 
@@ -207,6 +191,7 @@ class RestClient:
         await self.session.close()
 
 
+# API DEFINITION
 
 # @kraken.resource(success = , error=)
 # def time(headers, data):
@@ -216,25 +201,30 @@ class RestClient:
 #     }
 
 
+# EXAMPLE CODE
+
+
 async def get_time():
     """ get kraken time"""
-    rest_kraken = RestClient(api = Server(base_url='https://api.kraken.com'))
+    rest_kraken = RestClient(host='api.kraken.com', api = Server())
     try:
         response = await rest_kraken.time()
         print(f'response is {response}')
     finally:
         await rest_kraken.close()
 
+
 async def get_balance():
     """Start kraken websockets api
     """
     from aiokraken.rest import krak_key
-    rest_kraken = RestClient(api = Server(base_url='https://api.kraken.com',
-                                          key=krak_key.key,
+    rest_kraken = RestClient(host='api.kraken.com',
+                             api = Server(key=krak_key.key,
                                           secret=krak_key.secret))
     response = await rest_kraken.balance()
     await rest_kraken.close()
     print(f'response is {response}')
+
 
 @asyncio.coroutine
 def ask_exit(sig_name):
@@ -252,5 +242,5 @@ for signame in ('SIGINT', 'SIGTERM'):
         lambda: asyncio.ensure_future(ask_exit(signame))
     )
 
-loop.run_until_complete(get_time())
+#loop.run_until_complete(get_time())
 loop.run_until_complete(get_balance())
