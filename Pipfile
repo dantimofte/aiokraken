@@ -9,6 +9,14 @@ verify_ssl = true
 aiohttp = "*"
 aiodns = "*"
 cchardet = "*"
+pytest = "*"
+aiokraken = {path = ".",editable = true}
+pytest-vcr = "*"
+uplink = "*"
+marshmallow = "*"
+pandas = "*"
+parameterized = "*"
+marshmallow-dataframe = "*"
 
 [requires]
 python_version = "3.7"
