@@ -4,7 +4,7 @@ from parameterized import parameterized
 import json
 import marshmallow
 
-from ..time import TimeSchema
+from ..time import TimeSchema, Time
 from ...exceptions import AIOKrakenException
 
 """
@@ -21,21 +21,22 @@ class TestTimeSchema(unittest.TestCase):
 
     @parameterized.expand([
         # we make sure we are using a proper json string
-        [json.dumps({'error': [], 'result':{"unixtime": 11111111}})],
+        [json.dumps({"unixtime": 11111111})],
     ])
-    def test_load_ok(self, payload):
+    def test_load_ok(self, serialized):
         """ Verifying that expected data parses properly """
-        parsed = self.schema.loads(payload)
+        parsed = self.schema.loads(serialized)
+        assert isinstance(parsed, Time)
 
     @parameterized.expand([
         # we make sure we are using a proper json string
         [json.dumps({"what": "isit"})],
-        [json.dumps({"error": ["some_string"], "result": "something else"})],
+        [json.dumps({"unixtime": "something else"})],
     ])
-    def test_load_fail(self, payload):
+    def test_load_fail(self, serialized):
         """ Verifying that unexpected data fails properly """
         with self.assertRaises((AIOKrakenException, marshmallow.exceptions.ValidationError)):
-            self.schema.loads(payload)
+            self.schema.loads(serialized)
 
 
 

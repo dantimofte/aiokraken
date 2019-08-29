@@ -2,22 +2,27 @@ import marshmallow
 from marshmallow import fields, pre_load, post_load
 
 from ..exceptions import AIOKrakenException
+from .errors import ErrorsField
+from .ohlc import OHLCDataFrameSchema
+from .time import TimeSchema
+"""A bunch of classes to handle the payload. TOOD : find a better/simpler way ? """
 
 
-class PayloadSchema(marshmallow.Schema):
+class TimePayloadSchema(marshmallow.Schema):
     class Meta:
         # Pass EXCLUDE as Meta option to keep marshmallow 2 behavior
-        # ref: https://marshmallow.readthedocs.io/en/3.0/upgrading.html
+        # ref: https://marshmallow.readthedocs.io/en/stable/upgrading.html#upgrading-to-3-0
         unknown = getattr(marshmallow, "EXCLUDE", None)
 
+    error = ErrorsField()
+    result = fields.Nested(TimeSchema)
 
-    @pre_load(pass_many=True)
-    def check_errors(self, data, many, **kwargs):
-        # TODO : usual schema to manage error parsing
-        if "error" not in data: # TMP
-            raise marshmallow.ValidationError("error field not found")
 
-        if len(data.get("error")) > 0:  # TODO : currently buggy on error (silent retry ?). TOFIX
-            raise AIOKrakenException("ERROR in message from server: " + "\n".join(data.get("error")))
-            # TODO : check for errors and raise appropriate exception !
-        return data['result']
+class OHLCPayloadSchema(marshmallow.Schema):
+    class Meta:
+        # Pass EXCLUDE as Meta option to keep marshmallow 2 behavior
+        # ref: https://marshmallow.readthedocs.io/en/stable/upgrading.html#upgrading-to-3-0
+        unknown = getattr(marshmallow, "EXCLUDE", None)
+
+    error = ErrorsField()
+    result = fields.Nested(OHLCDataFrameSchema)

@@ -5,15 +5,12 @@ import numpy as np
 from marshmallow_dataframe import SplitDataFrameSchema
 
 ohlc_df = pd.DataFrame(
-    [],
+    # Need some sample data to get proper dtypes...
+    [[1567039620, '8746.4', '8751.5', '8745.7', '8745.7', '8749.3', '0.09663298', 8],
+     [1567039680, '8745.7', '8747.3', '8745.7', '8747.3', '8747.3', '0.00929540', 1]],
+    # grab that from kraken documentation
     columns=["time", "open", "high", "low", "close", "vwap", "volume", "count"]
 )
-
-class SchemaBase(marshmallow.Schema):
-    class Meta:
-        # Pass EXCLUDE as Meta option to keep marshmallow 2 behavior
-        # ref: https://marshmallow.readthedocs.io/en/3.0/upgrading.html
-        unknown = getattr(marshmallow, "EXCLUDE", None)
 
 # TODO : manage errors with : https://marshmallow.readthedocs.io/en/stable/extending.html#custom-class-meta-options ???
 
@@ -60,28 +57,49 @@ class SchemaBase(marshmallow.Schema):
 #                                       [1567042020, '8758.0', '8758.0', '8758.0', '8758.0', '8758.0', '0.00641000', 1],
 #                                       [1567042080, '8758.0', '8758.0', '8758.0', '8758.0', '8758.0', '0.29430485', 4],
 
+
+# Ref : https://stackoverflow.com/questions/42231334/define-fields-programmatically-in-marshmallow-schema
+
 class OHLCDataFrameSchema(SplitDataFrameSchema):
     """Automatically generated schema for ohlc dataframe"""
 
     class Meta:
         dtypes = ohlc_df.dtypes
 
-
-# TODO : custom type for errors
-class OHLCSchema(SchemaBase):
-    """Schema to build the data received for OHLC"""
-    error = marshmallow.fields.List(marshmallow.fields.Str())
-    result = marshmallow.fields.Method("panda")
-
-    def panda(self, obj):
-        pass
-        print(obj)
-
     @marshmallow.pre_load(pass_many=False)
-    def parse_ohlc(self, data, **kwargs):
-        return data
+    def add_implicit(self, data, **kwargs):
+        pass
+        return {
+            "data": data,
+            "columns": ohlc_df.columns,
+            "index": range(len(data)),
+        }
 
     # load or dump ?
-    @marshmallow.post_load(pass_many=False)
-    def make_ohlc(self, data, **kwargs):
-        return data  # TODO : embed in a specific type. all dataframes are not equivalent...
+    # @marshmallow.post_load(pass_many=False)
+    # def make_ohlc(self, data, **kwargs):
+    #     return data  # TODO : embed in a specific type. all dataframes are not equivalent...
+
+
+# # TODO : proper typing to limit ( and check ) pair name
+# def pair_field_nested(name, schema):
+#     return type(name + '_' + str(schema), (schema,), {
+#         name: schema
+#     })
+#
+#
+# XXBTZEUR_OHLCDataFrameSchema = pair_field_nested('XXBTZEUR', OHLCDataFrameSchema)
+
+
+# TMP to get it right...
+class XXBTZEUR_OHLCDataFrameSchema(marshmallow.Schema):
+
+    XXBTZEUR = marshmallow.fields.Nested(OHLCDataFrameSchema)
+
+    # @marshmallow.pre_load(pass_many=False)
+    # def add_implicit(self, data, **kwargs):
+    #     return {
+    #         "data": data,
+    #         "columns": ohlc_df.columns,
+    #         "index": [0],
+    #     }

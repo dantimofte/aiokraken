@@ -4,9 +4,9 @@ import json
 import marshmallow
 
 if __package__:
-    from ..ohlc import OHLCSchema
+    from ..ohlc import XXBTZEUR_OHLCDataFrameSchema
 else:
-    from aiokraken.rest.schemas.ohlc import OHLCSchema
+    from aiokraken.rest.schemas.ohlc import XXBTZEUR_OHLCDataFrameSchema
 
 """
 Test module.
@@ -18,18 +18,17 @@ For simple usecase examples, we should rely on doctests.
 class TestOHLCSchema(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.schema = OHLCSchema()
+        self.schema = XXBTZEUR_OHLCDataFrameSchema()
 
     @parameterized.expand([
         # we make sure we are using a proper json string
-        [json.dumps({'error': [], 'result': {'XXBTZEUR': [[1567041720, '8750.0', '8755.8', '8749.9', '8755.7', '8754.0', '3.98795136', 27],
-                                                          [1567041780, '8755.7', '8755.7', '8753.7', '8755.7', '8755.2', '0.02458507', 2], ]}
-                     })],
+        [json.dumps({'XXBTZEUR': [[1567041720, '8750.0', '8755.8', '8749.9', '8755.7', '8754.0', '3.98795136', 27],
+                                  [1567041780, '8755.7', '8755.7', '8753.7', '8755.7', '8755.2', '0.02458507', 2], ]})],
     ])
     def test_load_ok(self, payload):
         """ Verifying that expected data parses properly """
         parsed = self.schema.loads(payload)
-
+        pass
     # @parameterized.expand([
     #     # we make sure we are using a proper json string
     #     [json.dumps({"what": "isit"})],
