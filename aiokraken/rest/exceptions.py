@@ -1,0 +1,2 @@
+class AIOKrakenException(Exception):
+    pass
