@@ -1,0 +1,22 @@
+dist: xenial
+language: python
+
+branches:
+  except:
+    - gh-pages
+
+python:
+  - '3.7'
+  #- '3.8'
+
+
+install:
+  - pipenv install --dev --pre --skip-lock
+
+script:
+  - python -m aiokraken.rest.schemas.tests
+  - pytest tests
+
+notifications:
+  email: false
+
